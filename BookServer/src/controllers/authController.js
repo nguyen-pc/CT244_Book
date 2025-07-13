@@ -1,6 +1,10 @@
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const {
+  requestPasswordReset,
+  resetPassword,
+} = require("../service/authService");
 
 async function register(req, res) {
   const {
@@ -88,8 +92,8 @@ async function login_admin(req, res) {
     return res.status(401).json({ message: "Email or password incorrect" });
   }
 
-  if(user.isStaff === false){
-    return res.status(403).json({message:"you do not have access"})
+  if (user.isStaff === false) {
+    return res.status(403).json({ message: "you do not have access" });
   }
 
   const match = await bcrypt.compare(password, user.password);
@@ -271,7 +275,6 @@ async function create(req, res) {
     birthday,
   } = req.body;
 
-
   if (
     !username ||
     !first_name ||
@@ -308,7 +311,7 @@ async function create(req, res) {
       address,
       gender,
       birthday,
-    })
+    });
     return res.sendStatus(201);
   } catch (e) {
     return res
@@ -369,6 +372,22 @@ async function deleteUser(req, res) {
   }
 }
 
+const resetPasswordRequestController = async (req, res, next) => {
+  const requestPasswordResetService = await requestPasswordReset(
+    req.body.email
+  );
+  return res.json(requestPasswordResetService);
+};
+
+const resetPasswordController = async (req, res, next) => {
+  const resetPasswordService = await resetPassword(
+    req.body.userId,
+    req.body.token,
+    req.body.password
+  );
+  return res.json(resetPasswordService);
+};
+
 module.exports = {
   register,
   login,
@@ -381,5 +400,6 @@ module.exports = {
   getUserById,
   updateUser,
   deleteUser,
-
+  resetPasswordRequestController,
+  resetPasswordController,
 };

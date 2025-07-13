@@ -21,6 +21,12 @@ export interface LoginData {
   password: string
 }
 
+export interface ResetPassword {
+  userId: string
+  token: string,
+  password: string
+}
+
 export interface RegisterData {
   username: string
   email: string
@@ -73,6 +79,25 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    async forgotPassword(payload: LoginData) {
+      try {
+        const { data } = await useApi().post(`/api/auth/reset-password-request`, payload)
+        return data
+      } catch (error: Error | any) {
+        throw error.message
+      }
+    },
+
+    async resetPassword(payload: ResetPassword) {
+      console.log(payload)
+      try {
+        const { data } = await useApi().post(`/api/auth/reset-password`, payload)
+        return data
+      } catch (error: Error | any) {
+        throw error.message
+      }
+    },
+
     async register(payload: RegisterData) {
       try {
         const { data } = await useApi().post(`/api/auth/register`, payload)
@@ -112,7 +137,7 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    async updateUser(userId: string, userData: any){
+    async updateUser(userId: string, userData: any) {
       try {
         await useApiPrivate().put(`/api/auth/user/${userId}`, userData)
       } catch (error: Error | any) {

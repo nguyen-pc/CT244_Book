@@ -28,6 +28,24 @@ const router = createRouter({
       ]
     },
     {
+      path: '/forgotPassword',
+      name: 'forgotPassword',
+      component: () => import('../views/auth/ForgotPassword.vue'),
+      meta: { requiresGuest: true }
+    },
+    {
+      path: '/returnEmail',
+      name: 'returnEmail',
+      component: () => import('../views/auth/ReturnEmail.vue'),
+      meta: { requiresGuest: true }
+    },
+    {
+      path: '/passwordReset',
+      name: 'resetPassword',
+      component: () => import('../views/auth/PasswordReset.vue'),
+      meta: { requiresGuest: true }
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import('../views/auth/LoginView.vue'),
@@ -39,6 +57,7 @@ const router = createRouter({
       component: () => import('../views/auth/RegisterView.vue'),
       meta: { requiresGuest: true }
     },
+
     {
       path: '/user',
       name: 'user',

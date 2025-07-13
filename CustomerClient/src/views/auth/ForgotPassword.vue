@@ -2,7 +2,7 @@
   <div id="login">
     <div class="container">
       <div class="card card-body mt-4">
-        <h5 class="card-title">Login</h5>
+        <h5 class="card-title">Forgot Password</h5>
         <form @submit.prevent="submit">
           <div class="mb-3">
             <label for="email" class="form-label">Email address</label>
@@ -14,23 +14,8 @@
               autocomplete="off"
             />
           </div>
-          <div class="mb-3">
-            <label for="password" class="form-label">Password</label>
-            <input
-              v-model="loginData.password"
-              type="password"
-              class="form-control"
-              id="password"
-            />
-          </div>
-          <button type="submit" class="btn btn-success">Login</button>
-          <div>
-            Bạn quên mật khẩu? <a href="http://localhost:3006/forgotPassword">Link</a>
-          </div>
-          <div class="sign-up">
-            Don't have an account?
-            <span @click="signUp" class="sign-up-child">Sign Up</span>
-          </div>
+
+          <button type="submit" class="btn btn-success">Submit</button>
         </form>
       </div>
     </div>
@@ -49,7 +34,6 @@ const router = useRouter()
 
 const loginData = reactive<LoginData>({
   email: "",
-  password: "",
 })
 
 const errorMessage = ref<string>("")
@@ -59,13 +43,13 @@ const signUp = () => {
 };
 
 async function submit(){
-  await authStore.login(loginData)
+  await authStore.forgotPassword(loginData)
     .then(res => {
       toast.success("Đăng nhập thành công!", {
       autoClose: 2000,
       position: toast.POSITION.BOTTOM_RIGHT,
       } as ToastOptions)
-      router.replace({name: "home"})
+      router.replace({name: "returnEmail"})
     })
     .catch(err => {
       toast.error("Email hoặc mật khẩu chưa đúng!", {

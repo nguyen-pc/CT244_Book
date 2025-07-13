@@ -2,35 +2,20 @@
   <div id="login">
     <div class="container">
       <div class="card card-body mt-4">
-        <h5 class="card-title">Login</h5>
+        <h5 class="card-title">Forgot Password</h5>
         <form @submit.prevent="submit">
           <div class="mb-3">
-            <label for="email" class="form-label">Email address</label>
+            <label for="password" class="form-label">Nhập password mới: </label>
             <input
-              v-model="loginData.email"
-              type="email"
-              class="form-control"
-              id="email"
-              autocomplete="off"
-            />
-          </div>
-          <div class="mb-3">
-            <label for="password" class="form-label">Password</label>
-            <input
-              v-model="loginData.password"
+              v-model="resetPassword.password"
               type="password"
               class="form-control"
               id="password"
+              autocomplete="off"
             />
           </div>
-          <button type="submit" class="btn btn-success">Login</button>
-          <div>
-            Bạn quên mật khẩu? <a href="http://localhost:3006/forgotPassword">Link</a>
-          </div>
-          <div class="sign-up">
-            Don't have an account?
-            <span @click="signUp" class="sign-up-child">Sign Up</span>
-          </div>
+
+          <button type="submit" class="btn btn-success">Submit</button>
         </form>
       </div>
     </div>
@@ -38,19 +23,42 @@
 </template>
 
 <script setup lang="ts">
-import { useAuthStore, type LoginData } from '../../stores/auth';
+import { useAuthStore, type ResetPassword } from '../../stores/auth';
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
+
 import { toast, type ToastOptions } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 
 const authStore = useAuthStore()
 const router = useRouter()
+const route = useRoute();
+import { onMounted } from 'vue';
 
-const loginData = reactive<LoginData>({
-  email: "",
+
+onMounted(() => {
+  const token = route.query.token as string;
+  const userId = route.query.id as string;
+
+  if (token && userId) {
+    resetPassword.token = token;
+    resetPassword.userId = userId;
+  } else {
+    toast.error("Link đặt lại mật khẩu không hợp lệ!", {
+      autoClose: 2000,
+      position: toast.POSITION.BOTTOM_RIGHT,
+    } as ToastOptions);
+    router.replace({ name: "login" });
+  }
+});
+
+
+const resetPassword = reactive<ResetPassword>({
   password: "",
-})
+  userId: "",
+  token: "",
+  })
 
 const errorMessage = ref<string>("")
 
@@ -59,16 +67,16 @@ const signUp = () => {
 };
 
 async function submit(){
-  await authStore.login(loginData)
+  await authStore.resetPassword(resetPassword)
     .then(res => {
-      toast.success("Đăng nhập thành công!", {
+      toast.success("Đổi mật khẩu thành công!", {
       autoClose: 2000,
       position: toast.POSITION.BOTTOM_RIGHT,
       } as ToastOptions)
-      router.replace({name: "home"})
+      router.replace({name: "login"})
     })
     .catch(err => {
-      toast.error("Email hoặc mật khẩu chưa đúng!", {
+      toast.error("Có lỗi trong quá trình đặt lại mật khẩu!", {
          autoClose: 2000,
         position: toast.POSITION.BOTTOM_RIGHT,
      } as ToastOptions);

@@ -38,6 +38,35 @@ let getBodyHTMLEmail = (bookName, borrowDay) => {
   return result;
 };
 
+let sendEmailResetPassword = async (email, link) => {
+  let transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // true for 465, false for other ports
+    auth: {
+      user: process.env.EMAIL_APP, // generated ethereal user
+      pass: process.env.EMAIL_APP_PASSWORD, // generated ethereal password
+    },
+  });
+  // send mail with defined transport object
+  let info = await transporter.sendMail({
+    from: '"Thanh Nguyen 👻" <nguyenthcs430@gmail.com>', // sender address
+    to: email, // list of receivers
+    subject: "Reset Password", // Subject line
+    html: getBodyHTMLEmailResetPassword(link),
+  });
+};
+
+let getBodyHTMLEmailResetPassword = (link) => {
+  let result = "";
+
+  result = `
+  <h3> Thông tin reset password !</h3>
+   <p>Link reset password: ${link}</p>
+`;
+  return result;
+};
+
 // let getBodyHTMLEmailRemedy = (dataSend) => {
 //   let result = "";
 //   if (dataSend.language === "vi") {
@@ -103,5 +132,6 @@ let getBodyHTMLEmail = (bookName, borrowDay) => {
 
 module.exports = {
   sendSimpleEmail: sendSimpleEmail,
+  sendEmailResetPassword: sendEmailResetPassword,
   // sendAttachment: sendAttachment,
 };

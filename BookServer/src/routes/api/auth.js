@@ -26,4 +26,8 @@ router.put("/user/:userId", authControllers.updateUser);
 
 router.delete("/user/:userId", authControllers.deleteUser);
 
+router.post("/reset-password-request", authControllers.resetPasswordRequestController);
+
+router.post("/reset-password", authControllers.resetPasswordController);
+
 module.exports = router;
