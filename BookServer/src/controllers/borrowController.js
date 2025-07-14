@@ -13,12 +13,25 @@ async function create(req, res) {
     actualReturnDate,
     status,
   } = req.body;
+
   if (!user || !book || !borrowedDay) {
     return res.status(422).json({ message: "Invalid field" });
   }
 
   try {
-    // Tìm sách và kiểm tra số lượng
+    // Kiểm tra số lượng sách người dùng đã mượn chưa trả
+    const activeBorrows = await Borrow.find({
+      user: user,
+      status: { $ne: "returned" } // status khác "returned" tức là chưa trả
+    });
+
+    if (activeBorrows.length >= 5) {
+      return res.status(403).json({
+        message: "You have reached the maximum borrow limit (5 books)"
+      });
+    }
+
+    // Tìm sách và kiểm tra số lượng tồn
     const bookToBorrow = await Book.findById(book);
     if (!bookToBorrow) {
       return res.status(404).json({ message: "Book not found" });
@@ -27,9 +40,10 @@ async function create(req, res) {
     if (bookToBorrow.number <= 0) {
       return res.status(400).json({ message: "Book is out of stock" });
     }
-    console.log(email, bookName);
+
+    // Gửi email nếu cần (đang tắt)
     // await emailService.sendSimpleEmail(email, bookName, estimatedReturnDate);
-    console.log("<<<<<<<<<<<<<<<<");
+
     // Tạo bản ghi mượn sách
     await Borrow.create({
       user,
@@ -40,7 +54,7 @@ async function create(req, res) {
       status,
     });
 
-    // Giảm số lượng sách
+    // Cập nhật số lượng sách còn lại
     bookToBorrow.number -= 1;
     await bookToBorrow.save();
 
@@ -51,6 +65,7 @@ async function create(req, res) {
       .json({ message: "Could not create borrow", error: e.message });
   }
 }
+
 
 async function updateStatus(req, res) {
   const { borrowId, status, actualReturnDate } = req.body;

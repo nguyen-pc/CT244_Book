@@ -101,7 +101,13 @@ const handleBorrow = async () => {
       }
       } catch (error) {
     console.error("Error creating borrow:", error);
+    if(error=="Request failed with status code 403")
+      toast.error("Bạn đã mượn vượt quá số lượng cho phép (5 quyển)")
+    else  if(error=="Request failed with status code 400")
+      toast.error("Sách đã hết số lượng!")
+    else ("Lỗi khi mượn sách!")
   }
+  
 };
 
 const fetchBookData = async () => {
