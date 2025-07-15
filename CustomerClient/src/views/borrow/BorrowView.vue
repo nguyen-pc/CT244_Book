@@ -1,8 +1,8 @@
 <template>
-  <div class="container d-flex justify-content-between">
+  <div class="container d-flex justify-content-between responsive-book">
     <!-- Hiển thị sách nếu như tồn tại -->
     <div v-if="book" class="w-75 align-items-stretch">
-      <div class="book-details flex w-100 align-self-stretch">
+      <div class="book-details flex w-100 align-self-stretch responsive-content">
         <div>
           <img :src="`http://localhost:3500/uploads/${book.cover}`" alt="Book Cover" class="book-cover" />
         </div>
@@ -43,10 +43,10 @@
     </div>
     <!-- Thông báo không hiển thị sách -->
     <div v-else class="loading">
-      <p>Không tìm thấy sách</p>
+      <p>Đang tải sách...</p>
     </div>
     <!-- Phần bình luận -->
-    <div v-if="book" class="comments-container mt-2 border p-4 rounded w-50">
+    <div v-if="book" class="comments-container mt-2 border p-4 rounded w-50 responsive-comment">
       <div class="comments-header fw-bold">Bình luận sách:</div>
       <!-- Ô nhập bình luận -->
       <div class="comment-input-container d-flex">
@@ -421,5 +421,24 @@ const userComments = computed(() => comments.value);
   text-align: center;
   font-size: 1.5rem;
   color: #777;
+}
+
+@media screen and (max-width: 1200px) {
+  .responsive-book {
+    flex-wrap: wrap;
+    margin: 0 auto !important;
+    justify-content: center !important;
+  }
+
+  .responsive-content {
+    justify-content: center !important;
+    margin: 20px auto !important;
+    width: 100% !important;
+  }
+
+  .responsive-comment {
+    margin-top: 20px;
+    width: 100% !important;
+  }
 }
 </style>
