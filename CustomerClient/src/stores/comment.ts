@@ -42,6 +42,21 @@ export const useCommentStore = defineStore('comment', {
       } catch (error: Error | any) {
         throw error.message
       }
+    },
+
+    async updateComment(commentId: string, text: string) {
+      try {
+        const data = await useApiPrivate().put(`/api/comment/edit/${commentId}`, { text })
+      } catch (error: Error | any) {
+        throw error.message
+      }
+    },
+    async deleteComment(commentId: string) {
+      try {
+        const data = await useApiPrivate().delete(`/api/comment/delete/${commentId}`)
+      } catch (error: Error | any) {
+        throw error.message
+      }
     }
   }
 })
