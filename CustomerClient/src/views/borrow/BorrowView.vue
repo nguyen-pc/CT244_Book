@@ -157,7 +157,7 @@ const handleBorrow = async () => {
 
     toast.success("Mượn sách thành công!", {
       autoClose: 2000,
-      position: toast.POSITION.TOP_RIGHT,
+      position: toast.POSITION.BOTTOM_RIGHT,
     } as ToastOptions)
 
     if (book.value.number > 0) {
@@ -165,13 +165,19 @@ const handleBorrow = async () => {
     }
   } catch (error) {
     console.error("Error creating borrow:", error);
-    if(error=="Request failed with status code 403")
-      toast.error("Bạn đã mượn vượt quá số lượng cho phép (5 quyển)")
-    else  if(error=="Request failed with status code 400")
-      toast.error("Sách đã hết số lượng!")
+    if (error == "Request failed with status code 403")
+      toast.error("Bạn đã mượn vượt quá số lượng cho phép (5 quyển)", {
+        autoClose: 2000,
+        position: toast.POSITION.BOTTOM_RIGHT,
+      } as ToastOptions)
+    else if (error == "Request failed with status code 400")
+      toast.error("Sách đã hết số lượng!", {
+        autoClose: 2000,
+        position: toast.POSITION.BOTTOM_RIGHT,
+      } as ToastOptions)
     else ("Lỗi khi mượn sách!")
   }
-  
+
 };
 
 const fetchBookData = async () => {
