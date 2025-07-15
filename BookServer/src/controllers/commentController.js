@@ -33,4 +33,16 @@ async function getAllComment(req, res) {
   }
 }
 
+async function updateComment(req, res) {
+  try {
+
+  } catch (e) {
+
+  }
+}
+
+async function deleteComment(params) {
+
+}
+
 module.exports = { Create, getAllComment };
