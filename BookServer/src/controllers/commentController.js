@@ -33,16 +33,50 @@ async function getAllComment(req, res) {
   }
 }
 
-async function updateComment(req, res) {
+async function editComment(req, res) {
   try {
+    const commentId = req.params.commentId;
+    const userId = req.user.id;
+    const { text } = req.body;
+    const comment = await Comment.findById(commentId);
+    if (text.trim() === "" || !text) {
+      return res.status(400).json({ msg: "Text is required" })
+    }
+    if (!comment) {
+      return res.status(404).json({ message: "Comment not found" })
+    }
+    console.log(`${userId} ${comment.user.toString()}`);
+    if (comment.user.toString() !== userId) {
+      return res.status(403).json({ message: "Forbidden: Not your comment" })
+    }
+    comment.text = text
+    await comment.save()
+    console.log(comment.updatedAt);
+    return res.status(200).json({ message: "Comment deleted successfully", comment })
 
   } catch (e) {
-
+    console.log(e);
+    return res.status(500).json({ message: "Internal server error" })
   }
 }
 
-async function deleteComment(params) {
+async function deleteComment(req, res) {
+  try {
+    const commentId = req.params.commentId;
+    const user = req.user
+    const comment = await Comment.findById(commentId);
+    if (!comment) {
+      return res.status(404).json({ message: "Comment not found" })
+    }
 
+    if (comment.user.toString() !== user.id) {
+      return res.status(403).json({ message: "Forbidden: Not your comment" })
+    }
+    await Comment.findByIdAndDelete(commentId);
+    return res.status(200).json({ message: "Comment deleted successfully" })
+  } catch (e) {
+    return res.status(500).json({ message: "Internal server error" })
+  }
 }
 
-module.exports = { Create, getAllComment };
+module.exports = { Create, getAllComment, editComment, deleteComment };
