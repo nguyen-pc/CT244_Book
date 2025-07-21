@@ -11,7 +11,7 @@ export interface Borrow {
 }
 
 export interface State {
-  borrows:  Borrow[]
+  borrows: Borrow[]
   accessToken: string
   authReady: boolean
 }

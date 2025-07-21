@@ -145,12 +145,9 @@ const formData = reactive<Comment>({
 const handleBorrow = async () => {
   try {
     const borrowData = {
-      email: auth.value.email,
-      bookName: book.value.name,
-      user: auth.value._id, // Thay thế bằng ID người dùng hiện tại
+      user: auth.value._id,
       book: book.value._id,
-      borrowedDay: new Date(),
-      estimatedReturnDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 ngày sau
+      borrowedDays: 7,
     };
     await borrowStore.createBorrow(borrowData);
 

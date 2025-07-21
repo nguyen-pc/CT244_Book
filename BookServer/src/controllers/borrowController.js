@@ -1,20 +1,16 @@
 const Borrow = require("../models/Borrow");
 const Book = require("../models/Book");
 const emailService = require("../service/emailService");
+const { populate } = require("dotenv");
 
 async function create(req, res) {
   const {
-    email,
-    bookName,
     user,
     book,
-    borrowedDay,
-    estimatedReturnDate,
-    actualReturnDate,
-    status,
+    borrowedDays
   } = req.body;
 
-  if (!user || !book || !borrowedDay) {
+  if (!user || !book) {
     return res.status(422).json({ message: "Invalid field" });
   }
 
@@ -22,7 +18,7 @@ async function create(req, res) {
     // Kiểm tra số lượng sách người dùng đã mượn chưa trả
     const activeBorrows = await Borrow.find({
       user: user,
-      status: { $ne: "returned" } // status khác "returned" tức là chưa trả
+      status: { $nin: ["returned", "rejected", "eliminated"] }
     });
 
     if (activeBorrows.length >= 5) {
@@ -37,6 +33,7 @@ async function create(req, res) {
       return res.status(404).json({ message: "Book not found" });
     }
 
+    // Kiểm tra tồn kho
     if (bookToBorrow.number <= 0) {
       return res.status(400).json({ message: "Book is out of stock" });
     }
@@ -48,15 +45,15 @@ async function create(req, res) {
     await Borrow.create({
       user,
       book,
-      borrowedDay,
-      estimatedReturnDate,
-      actualReturnDate,
-      status,
+      borrowedDays,
+      status: "pending",
+      requestDay: new Date(),
     });
 
     // Cập nhật số lượng sách còn lại
-    bookToBorrow.number -= 1;
-    await bookToBorrow.save();
+    // bookToBorrow.number -= 1;
+    // await bookToBorrow.save();
+    // Chưa cập nhật cần chờ approve
 
     return res.sendStatus(201);
   } catch (e) {
@@ -68,30 +65,85 @@ async function create(req, res) {
 
 
 async function updateStatus(req, res) {
-  const { borrowId, status, actualReturnDate } = req.body;
+  const { borrowId, status } = req.body;
+  const validStatuses = [
+    "pending",
+    "approved",
+    "borrowing",
+    "returned",
+    "rejected",
+    "overdue",
+    "eliminated",
+  ];
 
-  console.log(borrowId, status);
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ message: "Invalid status value" });
+  }
 
   try {
     const borrow = await Borrow.findById(borrowId);
     if (!borrow) {
-      return res.status(404).json({ message: "Book not found" });
+      return res.status(404).json({ message: "Borrow record not found" });
     }
-    if (actualReturnDate != null) {
-      borrow.actualReturnDate = actualReturnDate;
+
+    const now = new Date();
+
+    if (["returned", "rejected", "eliminated"].includes(borrow.status)) {
+      return res.status(400).json({ message: `Cannot change status from ${borrow.status}` });
     }
-    if(status === "approved"){
-      // await emailService.sendSimpleEmail(email, bookName, estimatedReturnDate);
-    }
-    if (status === "returned") {
-      const book = await Book.findById(borrow.book._id);
-      if (book) {
-        book.number += 1;
+
+    // Process each status change
+    switch (status) {
+      case "approved": {
+        if (borrow.status !== "pending") {
+          return res.status(400).json({ message: "Only pending requests can be approved" });
+        }
+        const book = await Book.findById(borrow.book);
+        if (!book || book.number <= 0) {
+          return res.status(400).json({ message: "Book is out of stock or not found" });
+        }
+        book.number -= 1;
         await book.save();
+
+        borrow.approvedDay = now;
+        break;
+      }
+      case "rejected":
+        if (borrow.status !== "pending") {
+          return res.status(400).json({ message: "Only pending requests can be rejected" });
+        }
+        borrow.rejectedDay = now;
+        break;
+
+      case "borrowing":
+        if (borrow.status !== "approved") {
+          return res.status(400).json({ message: "Only approved requests can be borrowed" });
+        }
+        borrow.borrowedDay = now;
+        borrow.estimatedReturnDay = new Date(
+          now.getTime() + borrow.borrowedDays * 24 * 60 * 60 * 1000
+        );
+        break;
+
+      case "returned": {
+        if (!["borrowing", "overdue"].includes(borrow.status)) {
+          return res.status(400).json({ message: "Only borrowing requests can be returned" });
+        }
+        borrow.returnedDay = now;
+        const book = await Book.findById(borrow.book);
+        if (book) {
+          book.number += 1;
+          await book.save();
+        }
+        break;
       }
     }
+
+    // Update status after processing
     borrow.status = status;
     await borrow.save();
+
+    return res.status(200).json({ message: "Status updated successfully", borrow });
   } catch (e) {
     console.log(e);
     return res
@@ -99,6 +151,7 @@ async function updateStatus(req, res) {
       .json({ message: "Could not update status", error: e.message });
   }
 }
+
 
 async function returnBook(req, res) {
   const borrowId = req.params.borrowId;
@@ -132,8 +185,18 @@ async function returnBook(req, res) {
 async function getAllBorrow(req, res) {
   try {
     const borrows = await Borrow.find()
-      .populate("user", "username")
-      .populate("book", "name")
+      .populate({
+        path: "user",
+        select: "username email address",
+      })
+      .populate({
+        path: "book",
+        select: "name cover author number",
+        populate: {
+          path: "author",
+          select: "name"
+        }
+      })
       .exec();
     return res.status(200).json(borrows);
   } catch (e) {

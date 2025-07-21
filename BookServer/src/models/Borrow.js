@@ -5,20 +5,42 @@ const BorrowSchema = Schema({
   user: {
     type: Schema.Types.ObjectId,
     ref: "User",
-    require: true,
+    required: true,
   },
   book: {
     type: Schema.Types.ObjectId,
     ref: "Book",
-    require: true,
+    required: true,
   },
-  borrowedDay: {
+  requestDay: {
     type: Date,
     default: () => Date.now(),
   },
+  approvedDay: {
+    type: Date,
+    default: null,
+  },
+  rejectedDay: {
+    type: Date,
+    default: null,
+  },
+  elimiatedDay: {
+    type: Date,
+    default: null,
+  },
+  borrowedDay: {
+    type: Date,
+    default: null,
+  },
+  borrowedDays: {
+    type: Number,
+    default: 7,
+    min: 7,
+    max: 60,
+  },
   estimatedReturnDate: {
     type: Date,
-    default: () => new Date(new Date().getTime() + 7 * 24 * 60 * 60 * 1000),
+    default: null,
   },
   actualReturnDate: {
     type: Date,
@@ -26,8 +48,11 @@ const BorrowSchema = Schema({
   },
   status: {
     type: String,
-    enum: ["pending", "approved", "returned", "rejected"],
+    enum: ["pending", "approved", "returned", "rejected", "overdue", "borrowing", "eliminated"],
     default: "pending",
   },
+}, {
+  timestamps: true
 });
+
 module.exports = mongoose.model("Borrow", BorrowSchema);

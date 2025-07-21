@@ -1,71 +1,107 @@
 <template>
-  <div class="p-4 mt-10">
-    <div class="mb-2 text-lg font-semibold">Trang chủ</div>
-    <h5 class="mb-3 text-xl font-bold">Quản lí muợn sách</h5>
-    <div class="flex justify-between mb-4">
-      <div class="flex">
-        <input
-          placeholder="Nhập thông tin cần tìm"
-          v-model="query"
-          class="outline-none w-60 p-2 border-2 border-gray-500 rounded-l-lg"
-        />
-        <span class="p-2 bg-blue-500 text-white rounded-r-lg">
+  <div class="container mt-5 ms-3">
+    <div class="mb-4">
+      <h2 class="fw-bold">📚 Quản lý mượn sách</h2>
+    </div>
+
+    <!-- Tìm kiếm -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div class="input-group w-50">
+        <input type="text" class="form-control" placeholder="Tìm theo tên khách hoặc sách" v-model="query" />
+        <span class="input-group-text bg-primary text-white">
           <font-awesome-icon :icon="faSearch" />
         </span>
       </div>
-      <!-- <router-link :to="{ name: 'book:create' }" class="no-underline">
-        <div class="bg-blue-500 p-2 text-white rounded-lg text-center no-underline">
-          <font-awesome-icon :icon="faUserPlus" />
-          Tạo sách
-        </div>
-      </router-link> -->
     </div>
-    <div>
-      <template v-if="!filteredData.length">
-        <div>Không có người mượn nào</div>
-      </template>
-      <template v-else>
-        <table class="min-w-full border-collapse block md:table">
-          <thead class="block md:table-header-group">
-            <tr
-              class="border border-gray-300 md:border-none block md:table-row absolute -top-full md:top-auto -left-full md:left-auto md:relative"
-            >
-              <th
-                v-for="column in columns"
-                :key="column.key"
-                class="bg-gray-200 p-2 text-gray-600 font-bold block md:table-cell"
-              >
-                {{ column.title }}
-              </th>
-              <!-- <th class="bg-gray-200 p-2 text-gray-600 font-bold block md:table-cell">
-                Hành động
-              </th> -->
-            </tr>
-          </thead>
-          <tbody class="block md:table-row-group">
-            <tr
-              v-for="row in filteredData"
-              :key="row.id"
-              class="bg-gray-100 border border-gray-300 md:border-none block md:table-row"
-            >
-              <td
-                v-for="column in columns"
-                :key="column.key"
-                class="p-2 text-gray-800 block md:table-cell"
-              >
-                {{ renderCell(row, column) }}
-              </td>
-              <!-- <td class="p-2 text-gray-800 block md:table-cell">
-                <button @click="editBook(row)" class="mr-2 text-blue-500">Sửa</button>
-                <button @click="deleteBook(row)" class="text-red-500">Xóa</button>
-              </td> -->
-            </tr>
-          </tbody>
-        </table>
-      </template>
+
+    <!-- Danh sách -->
+    <div class="card shadow-sm">
+      <div class="card-body p-0">
+        <div v-if="!filteredData.length" class="p-3 text-center text-muted">Không có người mượn nào.</div>
+        <div v-else class="table-responsive">
+          <table class="table table-striped table-hover align-middle mb-0">
+            <thead class="table-light text-center">
+              <tr>
+                <th style="width: 25%;">Khách hàng</th>
+                <th style="width: 40%;">Sách</th>
+                <th style="width: 10%;">Thời gian</th>
+                <th style="width: 10%;">Trạng thái</th>
+                <th style="width: 15%;">Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, index) in filteredData" :key="item._id">
+                <!-- Khách hàng -->
+                <td>
+                  <div class="cursor-pointer">
+                    <div class="fw-semibold text-primary">{{ item.user.username }}</div>
+                    <div class="mt-2 small text-muted">
+                      <div>📧 {{ item.user.email || "Không có email" }}</div>
+                      <div>🏠 {{ item.user.address || "Không có địa chỉ" }}</div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Thông tin sách -->
+                <td>
+                  <div class="d-flex align-items-start gap-3" style="cursor: pointer;">
+                    <img :src="`http://localhost:3500/uploads/${item.book.cover}`" class="rounded shadow-sm"
+                      style="width: 70px; height: 100px; object-fit: cover;" />
+                    <div>
+                      <div class="fw-semibold">{{ item.book.name }}</div>
+                      <div class="text-muted mt-2 small">
+                        <div>Tác giả: <span class="text-dark">{{ item.book.author.name }}</span></div>
+                        <div>Số lượng: <span class="text-dark">{{ item.book.number }}</span></div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <!-- Mốc thời gian -->
+                <td class="text-center">
+                  <div v-if="item.status === 'pending'">Ngày yêu cầu: {{ formatDate(item.requestDay) }}</div>
+                </td>
+                <!-- Trạng thái -->
+                <td class="text-center">
+                  <div class="m-0 p-2" style="font-size: 14px;" :class="{
+                    'badge bg-primary': item.status === 'pending',
+                    'badge bg-success': item.status === 'borrowing',
+                    'badge bg-secondary': item.status === 'returned',
+                    'badge bg-danger': item.status === 'overdue'
+                  }" v-html="getStatus(item.status)">
+                  </div>
+                </td>
+
+                <!-- Hành động -->
+                <td class="text-center">
+                  <div v-if="updateBorrowId !== item._id" class="d-flex justify-content-around">
+                    <button class="btn btn-sm btn-outline-danger" @click="setUpdateBorrow(item._id, 'rejected')">
+                      <i class="fa-solid fa-x me-1"></i> Từ chối
+                    </button>
+                    <button class="btn btn-sm btn-outline-success" @click="setUpdateBorrow(item._id, 'approved')">
+                      <i class="fa-solid fa-check me-1"></i> Duyệt
+                    </button>
+                  </div>
+                  <div v-else>
+                    <p class="text-danger small mb-2">Xác nhận lưu thay đổi?</p>
+                    <div class="d-flex justify-content-around">
+                      <button class="btn btn-sm btn-success" @click="editBorrowing(item)">
+                        <i class="fa-solid fa-check me-1"></i> Xác nhận
+                      </button>
+                      <button class="btn btn-sm btn-secondary" @click="removeUpdateBorrow">
+                        <i class="fa-solid fa-x me-1"></i> Hủy
+                      </button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 </template>
+
 
 <script setup lang="ts">
 import { useRouter } from "vue-router";
@@ -74,17 +110,22 @@ import { useBorrowStore } from "../../stores/borrow";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { faSearch, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 
-const router = useRouter();
+const collapsedIndexes = ref(new Set());
+
+function toggleCollapse(index) {
+  if (collapsedIndexes.value.has(index)) {
+    collapsedIndexes.value.delete(index);
+  } else {
+    collapsedIndexes.value.add(index);
+  }
+}
+
+function isCollapsed(index) {
+  return collapsedIndexes.value.has(index);
+}
+
 const borrowStore = useBorrowStore();
 const query = ref("");
-
-const columns = [
-  { title: "Tên username", dataIndex: "user.username", key: "user._id" },
-  { title: "Tên sách", dataIndex: "book.name", key: "book" },
-  { title: "Ngày mượn", dataIndex: "borrowedDay", key: "borrowedDay" },
-  { title: "Hạn trả", dataIndex: "estimatedReturnDate", key: "estimatedReturnDate" },
-  { title: "Ngày đã trả", dataIndex: "actualReturnDate", key: "actualReturnDate" },
-];
 
 const fetchBorrow = async () => {
   try {
@@ -121,40 +162,28 @@ const formatDate = (dateString: string) => {
   });
 };
 
-const renderCell = (row: any, column: any) => {
-  const keys = column.dataIndex.split(".");
-  let value = row;
-  try {
-    keys.forEach((key: any) => {
-      value = value[key];
-    });
-    if (["borrowedDay", "estimatedReturnDate", "actualReturnDate"].includes(column.key)) {
-      return formatDate(value);
-    }
-  } catch (error) {
-    console.error("Error accessing value for column:", column, "row:", row);
-    value = ""; // Hoặc giá trị mặc định nào đó nếu cần thiết
+function getStatus(status: string): string {
+  switch (status) {
+    case "pending": return `<i class="fa-solid fa-hourglass-half me-2"></i> Đang xử lý`;
+    case "approved":
+      return `<i class="fa-solid fa-check-circle text-success"></i> Đã duyệt`;
+    case "rejected":
+      return `<i class="fa-solid fa-times-circle text-danger"></i> Đã từ chối`;
+    default:
+      return `<i class="fa-solid fa-question-circle text-secondary"></i> Chưa xác định`;
   }
-  return value !== undefined && value !== null ? value : "";
-};
+}
 
-// const editBook = (book: any) => {
-//   router.push({ name: "book:edit", params: { id: book._id } });
-// };
+const updateBorrowId = ref("");
+const updateStatus = ref("")
+function setUpdateBorrow(id: string, status: string) {
+  updateBorrowId.value = id;
+  updateStatus.value = status;
+}
+function removeUpdateBorrow() {
+  updateBorrowId.value = "";
+}
 
-// const deleteBook = async (book: any) => {
-//   const confirmed = confirm(`Bạn có chắc chắn muốn xóa sách ${book.name}?`);
-//   if (confirmed) {
-//     try {
-//       await borrowStore.deleteBook(book._id);
-//       alert("Xóa sách thành công");
-//       await fetchBorrow();
-//     } catch (error) {
-//       console.error("Error deleting book:", error);
-//       alert("Xóa sách thất bại");
-//     }
-//   }
-// };
 </script>
 
 <style scoped>
@@ -162,12 +191,19 @@ table {
   width: 100%;
   border-collapse: collapse;
 }
+
 th,
 td {
   border: 1px solid black;
   padding: 8px;
 }
+
 th {
   background-color: #f4f4f4;
+}
+
+.hover-text-danger:hover {
+  color: #dc3545;
+  text-decoration: underline;
 }
 </style>
