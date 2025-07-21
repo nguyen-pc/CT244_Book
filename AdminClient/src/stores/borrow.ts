@@ -39,6 +39,14 @@ export const useBorrowStore = defineStore('borrow', {
       } catch (error: Error | any) {
         throw error.message
       }
+    },
+    async updateBorrow(borrowId: string, status: string) {
+      try {
+        const { data } = await useApiPrivate().put('/api/borrow/status', { borrowId, status })
+        return data
+      } catch (error: Error | any) {
+        throw error.message
+      }
     }
   }
 })
