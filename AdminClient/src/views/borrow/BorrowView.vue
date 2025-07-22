@@ -73,17 +73,25 @@
                 <td class="text-center text-muted">
                   <div v-if="item.status === 'pending'">
                     <small>Yêu cầu:</small>
-                    <div class="fw-medium">{{ formatDate(item.requestDay) }}</div>
+                    <div class="fw-medium">{{ formatDate(item.requestDate) }}</div>
+                  </div>
+                  <div v-else-if="item.status === 'approved'">
+                    <small>Đã duyệt:</small>
+                    <div class="fw-medium">{{ formatDate(item.approvedDate) }}</div>
+                  </div>
+                  <div v-else-if="item.status === 'rejected'">
+                    <small>Đã duyệt:</small>
+                    <div class="fw-medium">{{ formatDate(item.rejectedDate) }}</div>
                   </div>
                   <div v-else-if="item.status === 'borrowing' || item.status === 'overdue'">
-                    <small>Mượn:</small>
-                    <div class="fw-medium">{{ formatDate(item.borrowDay) }}</div>
+                    <small>Đã mượn:</small>
+                    <div class="fw-medium">{{ formatDate(item.borrowedDate) }}</div>
                     <small>Trả dự kiến:</small>
-                    <div class="fw-medium">{{ formatDate(item.returnDay) }}</div>
+                    <div class="fw-medium">{{ formatDate(item.estimatedReturnDate) }}</div>
                   </div>
                   <div v-else-if="item.status === 'returned' || item.status === 'eliminated'">
                     <small>Hoàn thành:</small>
-                    <div class="fw-medium">{{ formatDate(item.actualReturnDay) }}</div>
+                    <div class="fw-medium">{{ formatDate(item.actualReturnDate) }}</div>
                   </div>
                   <div v-else>
                     <small>N/A</small>

@@ -106,7 +106,7 @@ async function updateStatus(req, res) {
         if (!["borrowing", "overdue"].includes(borrow.status)) {
           return res.status(400).json({ message: "Only borrowing or overdue books can be returned" });
         }
-        borrow.returnedDate = now;
+        borrow.actualReturnDate = now;
         const book = await Book.findById(borrow.book);
         if (book) {
           book.number += 1;
