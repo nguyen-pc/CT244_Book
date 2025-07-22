@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const BorrowSchema = Schema({
+const BorrowSchema = new Schema({
   user: {
     type: Schema.Types.ObjectId,
     ref: "User",
@@ -12,23 +12,23 @@ const BorrowSchema = Schema({
     ref: "Book",
     required: true,
   },
-  requestDay: {
+  requestDate: {
     type: Date,
     default: () => Date.now(),
   },
-  approvedDay: {
+  approvedDate: {
     type: Date,
     default: null,
   },
-  rejectedDay: {
+  rejectedDate: {
     type: Date,
     default: null,
   },
-  elimiatedDay: {
+  eliminatedDate: {
     type: Date,
     default: null,
   },
-  borrowedDay: {
+  borrowedDate: {
     type: Date,
     default: null,
   },
@@ -48,7 +48,15 @@ const BorrowSchema = Schema({
   },
   status: {
     type: String,
-    enum: ["pending", "approved", "returned", "rejected", "overdue", "borrowing", "eliminated"],
+    enum: [
+      "pending",
+      "approved",
+      "returned",
+      "rejected",
+      "overdue",
+      "borrowing",
+      "eliminated"
+    ],
     default: "pending",
   },
 }, {

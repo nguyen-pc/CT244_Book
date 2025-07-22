@@ -11,6 +11,12 @@ const credentials = require("./src/middleware/credentials");
 const errorHandlerMiddleware = require("./src/middleware/error_handleware");
 const authenticationMiddleware = require("./src/middleware/authentication");
 
+// Node cron
+const cron = require("node-cron");
+
+// Update borrow statuses
+const updateBorrowStatus = require("./src/command/updateBorrowStatus");
+
 const app = express();
 const PORT = 3500;
 
@@ -60,9 +66,16 @@ app.all("*", (req, res) => {
   }
 });
 
-mongoose.connection.once("open", () => {
+mongoose.connection.once("open", async () => {
   console.log("DB connected");
+  await updateBorrowStatus();
   app.listen(PORT, () => {
     console.log(`Listening on port ${PORT}`);
   });
+});
+
+// Update status
+cron.schedule('0 0 * * *', () => {
+  console.log("Running cron job at 00:00: updateBorrowStatus");
+  updateBorrowStatus();
 });
