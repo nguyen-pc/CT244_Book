@@ -1,5 +1,5 @@
 <template>
-  <div class="container py-4 mt-10">
+  <div class="container py-4 mt-10 ms-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2 class="fw-bold text-primary mb-0">
         📚 Quản lý Mượn Sách
@@ -35,23 +35,26 @@
           <table class="table table-striped table-hover align-middle mb-0">
             <thead class="bg-light">
               <tr>
-                <th scope="col" class="text-center" style="width: 25%">Khách hàng</th>
-                <th scope="col" class="text-center" style="width: 40%">Sách</th>
-                <th scope="col" class="text-center" style="width: 10%">Thời gian</th>
+                <th scope="col" class="text-center" style="width: 20%">Khách hàng</th>
+                <th scope="col" class="text-center" style="width: 30%">Sách</th>
+                <th scope="col" class="text-center" style="width: 20%">Thời gian</th>
                 <th scope="col" class="text-center" style="width: 10%">Trạng thái</th>
-                <th scope="col" class="text-center" style="width: 15%">Hành động</th>
+                <th scope="col" class="text-center" style="width: 20%">Hành động</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="item in filteredData" :key="item._id">
                 <td>
                   <div class="d-flex flex-column justify-content-center">
-                    <div class="fw-semibold text-primary">
+                    <div class="fw-semibold text-dark">
                       {{ item.user.username }}
                     </div>
                     <small class="text-muted mt-1">
-                      <div>📧 {{ item.user.email || "Không có email" }}</div>
-                      <div>🏠 {{ item.user.address || "Không có địa chỉ" }}</div>
+                      <div><i class="fa-solid fa-share me-1 text-dark"></i> {{ item.user.email || "Không có email" }}
+                      </div>
+                      <div><i class="fa-solid fa-location-dot text-danger me-1"></i>
+                        {{ item.user.address || "Không có địa chỉ" }}
+                      </div>
                     </small>
                   </div>
                 </td>
@@ -82,7 +85,7 @@
                     <div class="fw-medium">{{ formatDate(item.approvedDate) }}</div>
                   </div>
                   <div v-else-if="item.status === 'rejected'">
-                    <small>Đã duyệt:</small>
+                    <small>Đã từ chối:</small>
                     <div class="fw-medium">{{ formatDate(item.rejectedDate) }}</div>
                   </div>
                   <div v-else-if="item.status === 'borrowing' || item.status === 'overdue'">
@@ -101,7 +104,7 @@
                 </td>
 
                 <td class="text-center">
-                  <span class="badge py-2 px-3 fw-normal" :class="{
+                  <span class="badge py-2 px-3 fw-bold w-100" :class="{
                     'bg-warning text-dark': item.status === 'pending',
                     'bg-success': item.status === 'approved',
                     'bg-danger': item.status === 'rejected' || item.status === 'overdue',
@@ -114,28 +117,28 @@
                 <td class="text-center">
                   <div v-if="updateBorrowId !== item._id">
                     <div v-if="item.status === 'pending'" class="d-flex gap-2 justify-content-center">
-                      <button class="btn btn-danger btn-sm" @click="setUpdateBorrow(item._id, 'rejected')"
+                      <button class="btn btn-danger btn-sm fw-bold" @click="setUpdateBorrow(item._id, 'rejected')"
                         title="Từ chối yêu cầu">
-                        <i class="fa-solid fa-xmark"></i>
+                        <i class="fa-solid fa-xmark"></i> Từ chối
                       </button>
-                      <button class="btn btn-success btn-sm" @click="setUpdateBorrow(item._id, 'approved')"
+                      <button class="btn btn-success btn-sm fw-bold" @click="setUpdateBorrow(item._id, 'approved')"
                         title="Duyệt yêu cầu">
-                        <i class="fa-solid fa-check"></i>
+                        <i class="fa-solid fa-check"></i> Đồng ý
                       </button>
                     </div>
 
                     <div v-else-if="item.status === 'approved'" class="d-flex gap-2 justify-content-center">
-                      <button class="btn btn-primary btn-sm" @click="setUpdateBorrow(item._id, 'borrowing')"
-                        title="Xác nhận mượn sách">
-                        <i class="fa-solid fa-book-open-reader"></i> Xác nhận mượn
+                      <button class="btn btn-primary btn-sm fw-bold w-75"
+                        @click="setUpdateBorrow(item._id, 'borrowing')" title="Xác nhận cho mượn sách">
+                        <i class="fa-solid fa-book-open-reader me-1"></i> Mượn sách
                       </button>
                     </div>
 
                     <div v-else-if="item.status === 'borrowing' || item.status === 'overdue'"
                       class="d-flex gap-2 justify-content-center">
-                      <button class="btn btn-info btn-sm text-white" @click="setUpdateBorrow(item._id, 'returned')"
-                        title="Xác nhận trả sách">
-                        <i class="fa-solid fa-book-return"></i> Xác nhận trả
+                      <button class="btn btn-info btn-sm text-white fw-bold w-75"
+                        @click="setUpdateBorrow(item._id, 'returned')" title="Xác nhận trả sách">
+                        <i class="fa-solid fa-book me-2"></i> Trả sách
                       </button>
                     </div>
 
@@ -144,13 +147,13 @@
                       item.status === 'returned' ||
                       item.status === 'rejected'
                     " class="d-flex gap-2 justify-content-center">
-                      <button class="btn btn-outline-secondary btn-sm" disabled>
-                        <i class="fa-solid fa-check-double"></i> Đã kết thúc
+                      <button class="btn btn-outline-secondary btn-sm fw-bold w-75" disabled>
+                        <i class="fa-solid fa-check-double me-1"></i> Đã kết thúc
                       </button>
                     </div>
                   </div>
                   <div v-else class="d-flex flex-column align-items-center">
-                    <p class="text-danger small mb-2">Lưu thay đổi?</p>
+                    <p class="text-danger small mb-2 fw-bold">Lưu thay đổi?</p>
                     <div class="d-flex gap-2">
                       <button class="btn btn-success btn-sm" @click="updateBorrow">
                         <i class="fa-solid fa-check"></i>
