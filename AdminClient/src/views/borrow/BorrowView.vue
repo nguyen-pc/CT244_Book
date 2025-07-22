@@ -74,6 +74,8 @@
                   <div v-if="item.status === 'pending'">
                     <small>Yêu cầu:</small>
                     <div class="fw-medium">{{ formatDate(item.requestDate) }}</div>
+                    <small>Số ngày:</small>
+                    <div class="fw-medium text-danger">{{ item.borrowedDays }}</div>
                   </div>
                   <div v-else-if="item.status === 'approved'">
                     <small>Đã duyệt:</small>

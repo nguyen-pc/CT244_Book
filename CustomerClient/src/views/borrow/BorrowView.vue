@@ -34,9 +34,20 @@
             <span class="fw-semibold text-danger fw-bold">{{ book.unitCost }} VND</span>
           </p>
 
-          <button @click="handleBorrow" class="btn btn-success w-100">
-            Đăng kí mượn
-          </button>
+          <div>
+            <button v-if="!isBorrowing" @click="borrowing" class="btn btn-success w-100">
+              Đăng kí mượn
+            </button>
+            <div v-else>
+              <p class="fw-bold text-danger">Nhập số ngày bạn muốn mượn (7 - 60 ngày).</p>
+              <div class="d-flex gap-2">
+                <input type="number" v-model="borrowedDays" min="7" max="60" class="borrow-input"
+                  style="width: 60px;" />
+                <button class="btn-success" style="width: 30%;" @click="handleBorrow">Xác nhận</button>
+                <button class="btn-outline-secondary" @click="cancelBorrowing">Hủy</button>
+              </div>
+            </div>
+          </div>
         </div>
 
       </div>
@@ -115,6 +126,7 @@
       <p v-else>Không có bình luận nào.</p>
     </div>
   </div>
+
 </template>
 
 <script setup lang="ts">
@@ -142,24 +154,36 @@ const formData = reactive<Comment>({
   text: ""
 });
 
+const borrowedDays = ref(7);
+const isBorrowing = ref(false);
+const borrowing = () => {
+  isBorrowing.value = true;
+}
+const cancelBorrowing = () => {
+  isBorrowing.value = false;
+}
 const handleBorrow = async () => {
   try {
     const borrowData = {
       user: auth.value._id,
       book: book.value._id,
-      borrowedDays: 7,
+      borrowedDays: borrowedDays.value,
     };
+    if (borrowedDays.value > 60 || borrowedDays.value < 7) {
+      toast.error("Số ngày mượn phải từ 7 đến 60 ngày!", {
+        autoClose: 2000,
+        position: toast.POSITION.BOTTOM_RIGHT,
+      } as ToastOptions)
+      return;
+    }
     await borrowStore.createBorrow(borrowData);
 
 
-    toast.success("Mượn sách thành công!", {
+    toast.success("Yêu cầu của bạn đang chờ duyệt!", {
       autoClose: 2000,
       position: toast.POSITION.BOTTOM_RIGHT,
     } as ToastOptions)
 
-    if (book.value.number > 0) {
-      book.value.number -= 1;
-    }
   } catch (error) {
     console.error("Error creating borrow:", error);
     if (error == "Request failed with status code 403")
@@ -449,5 +473,36 @@ const userComments = computed(() => comments.value);
     margin-top: 20px;
     width: 100% !important;
   }
+}
+
+/* Nhập số lượng mượn sách */
+.borrow-box {
+  justify-content: start;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.borrow-input {
+  text-align: center;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.borrow-input:focus {
+  border-color: #198754;
+}
+
+button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  opacity: 0.9;
 }
 </style>
