@@ -1,22 +1,32 @@
 <template>
-  <div id="login">
-    <div class="container">
-      <div class="card card-body mt-4">
-        <h5 class="card-title">Forgot Password</h5>
-        <form @submit.prevent="submit">
-          <div class="mb-3">
-            <label for="password" class="form-label">Nhập password mới: </label>
-            <input
-              v-model="resetPassword.password"
-              type="password"
-              class="form-control"
-              id="password"
-              autocomplete="off"
-            />
-          </div>
+  <div class="reset-password-page d-flex justify-content-center align-items-center">
+    <div class="card p-4 shadow-lg border-0 reset-password-card">
+      <h5 class="card-title text-center text-success mb-4 fw-bold">Đặt lại mật khẩu</h5>
+      <p class="text-center text-muted mb-4">
+        Nhập mật khẩu mới của bạn để hoàn tất quá trình.
+      </p>
 
-          <button type="submit" class="btn btn-success">Submit</button>
-        </form>
+      <form @submit.prevent="submit">
+        <div class="mb-3">
+          <label for="password" class="form-label">Mật khẩu mới</label>
+          <input v-model="resetPassword.password" type="password" class="form-control" id="password"
+            placeholder="Nhập mật khẩu mới" required />
+        </div>
+        <div class="mb-3">
+          <label for="confirm-password" class="form-label">Xác nhận mật khẩu</label>
+          <input v-model="confirmPassword" type="password" class="form-control" id="confirm-password"
+            placeholder="Nhập lại mật khẩu mới" required />
+        </div>
+
+        <button type="submit" class="btn btn-success w-100 fw-bold mt-2">
+          Cập nhật mật khẩu
+        </button>
+      </form>
+
+      <div class="mt-4 text-center">
+        <router-link :to="{ name: 'login' }" class="text-muted text-decoration-none small">
+          Quay lại trang đăng nhập
+        </router-link>
       </div>
     </div>
   </div>
@@ -24,18 +34,21 @@
 
 <script setup lang="ts">
 import { useAuthStore, type ResetPassword } from '../../stores/auth';
-import { reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { useRoute } from 'vue-router';
-
+import { reactive, ref, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { toast, type ToastOptions } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
 
-const authStore = useAuthStore()
-const router = useRouter()
+const authStore = useAuthStore();
+const router = useRouter();
 const route = useRoute();
-import { onMounted } from 'vue';
 
+const resetPassword = reactive<ResetPassword>({
+  password: "",
+  userId: "",
+  token: "",
+});
+const confirmPassword = ref("");
 
 onMounted(() => {
   const token = route.query.token as string;
@@ -45,57 +58,65 @@ onMounted(() => {
     resetPassword.token = token;
     resetPassword.userId = userId;
   } else {
-    toast.error("Link đặt lại mật khẩu không hợp lệ!", {
-      autoClose: 2000,
+    toast.error("Liên kết đặt lại mật khẩu không hợp lệ!", {
+      autoClose: 3000,
       position: toast.POSITION.BOTTOM_RIGHT,
     } as ToastOptions);
     router.replace({ name: "login" });
   }
 });
 
-
-const resetPassword = reactive<ResetPassword>({
-  password: "",
-  userId: "",
-  token: "",
-  })
-
-const errorMessage = ref<string>("")
-
-const signUp = () => {
-  router.push({ name: "register" });
-};
-
-async function submit(){
-  await authStore.resetPassword(resetPassword)
-    .then(res => {
-      toast.success("Đổi mật khẩu thành công!", {
-      autoClose: 2000,
+async function submit() {
+  if (resetPassword.password !== confirmPassword.value) {
+    toast.error("Mật khẩu xác nhận không khớp!", {
+      autoClose: 3000,
       position: toast.POSITION.BOTTOM_RIGHT,
-      } as ToastOptions)
-      router.replace({name: "login"})
-    })
-    .catch(err => {
-      toast.error("Có lỗi trong quá trình đặt lại mật khẩu!", {
-         autoClose: 2000,
-        position: toast.POSITION.BOTTOM_RIGHT,
-     } as ToastOptions);
-      errorMessage.value = err.message
-    })
+    } as ToastOptions);
+    return;
+  }
+
+  try {
+    await authStore.resetPassword(resetPassword);
+    toast.success("Mật khẩu của bạn đã được cập nhật thành công!", {
+      autoClose: 3000,
+      position: toast.POSITION.BOTTOM_RIGHT,
+    } as ToastOptions);
+    router.replace({ name: "login" });
+  } catch (err) {
+    toast.error("Có lỗi trong quá trình đặt lại mật khẩu. Vui lòng thử lại!", {
+      autoClose: 3000,
+      position: toast.POSITION.BOTTOM_RIGHT,
+    } as ToastOptions);
+  }
 }
 </script>
 
 <style scoped>
-#login .card {
-  max-width: 40vw;
-  margin: auto;
+.reset-password-page {
+  background-color: #f8f9fa;
+  /* Màu nền nhẹ nhàng */
+  min-height: 100vh;
 }
 
-.sign-up {
-  margin-top: 10px;
+.reset-password-card {
+  width: 100%;
+  max-width: 450px;
+  /* Tăng kích thước tối đa cho form */
+  border-radius: 10px;
 }
-.sign-up-child {
-  color: green;
-  cursor: pointer;
+
+.form-label {
+  font-weight: 500;
+}
+
+.btn-success {
+  background-color: #28a745;
+  border-color: #28a745;
+  transition: background-color 0.3s ease;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
 }
 </style>

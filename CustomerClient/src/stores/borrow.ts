@@ -8,7 +8,6 @@ export enum BorrowStatus {
   REJECTED = 'rejected'
 }
 
-
 export interface Borrow {
   id: string
   email: String
@@ -19,7 +18,6 @@ export interface Borrow {
   estimatedReturnDate: Date
   actualReturnDate?: Date
   status: BorrowStatus
-
 }
 
 export interface State {
@@ -52,8 +50,8 @@ export const useBorrowStore = defineStore('borrow', {
       try {
         const payload = {
           ...borrowData,
-          status: BorrowStatus.PENDING  // Luôn set trạng thái mặc định là pending
-        };
+          status: BorrowStatus.PENDING // Luôn set trạng thái mặc định là pending
+        }
         const { data } = await useApi().post('/api/borrow/create', payload)
         console.log(borrowData)
         this.borrows.push(data)
@@ -89,6 +87,15 @@ export const useBorrowStore = defineStore('borrow', {
       try {
         await useApiPrivate().delete(`/api/borrow/${borrowId}`)
         this.borrows = this.borrows.filter((borrow) => borrow.id !== borrowId)
+      } catch (error: Error | any) {
+        throw error.message
+      }
+    },
+
+    async updateBorrow(borrowId: string, status: string) {
+      try {
+        const { data } = await useApiPrivate().put('/api/borrow/status', { borrowId, status })
+        return data
       } catch (error: Error | any) {
         throw error.message
       }

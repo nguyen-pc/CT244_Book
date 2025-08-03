@@ -191,7 +191,10 @@ async function getUserBorrow(req, res) {
   }
   try {
     const borrowUser = await Borrow.find({ user: userId })
-      .populate("book", "name")
+      .populate({
+        path: "book",
+        select: "name cover"
+      })
       .exec();
     if (!borrowUser) {
       return res.status(405).json({ message: "borrowUser not found" });

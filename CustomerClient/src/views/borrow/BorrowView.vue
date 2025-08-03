@@ -1,132 +1,119 @@
 <template>
-  <div class="container d-flex justify-content-between responsive-book">
-    <!-- Hiển thị sách nếu như tồn tại -->
-    <div v-if="book" class="w-75 align-items-stretch">
-      <div class="book-details flex w-100 align-self-stretch responsive-content">
-        <div>
-          <img :src="`http://localhost:3500/uploads/${book.cover}`" alt="Book Cover" class="book-cover" />
-        </div>
-        <div class="ms-4 card shadow-sm border-0 p-4" style="max-width: 500px;">
-          <h3 class="card-title text-success fw-bold mb-3">{{ book.name }}</h3>
+  <div class="container py-5">
+    <div v-if="book" class="row gx-lg-5">
+      <div class="col-lg-6 mb-4 mb-lg-0">
+        <div class="d-flex flex-column flex-md-row align-items-center">
+          <img :src="`http://localhost:3500/uploads/${book.cover}`" alt="Book Cover"
+            class="book-cover mb-4 mb-md-0 me-md-4" />
+          <div class="card p-4 w-100 h-100 border-0 shadow-sm">
+            <h3 class="card-title text-success fw-bold mb-3">{{ book.name }}</h3>
 
-          <p class="mb-2">
-            <span class="text-muted fw-bold">Tác giả: </span>
-            <span class="fw-semibold">{{ book.author.name }}</span>
-          </p>
+            <p class="mb-2">
+              <span class="text-muted fw-bold">Tác giả: </span>
+              <span class="fw-semibold">{{ book.author.name }}</span>
+            </p>
 
-          <p class="mb-2">
-            <span class="text-muted fw-bold">Nhà xuất bản: </span>
-            <span class="fw-semibold">{{ book.publisher.name }}</span>
-          </p>
+            <p class="mb-2">
+              <span class="text-muted fw-bold">Nhà xuất bản: </span>
+              <span class="fw-semibold">{{ book.publisher.name }}</span>
+            </p>
 
-          <p class="mb-2">
-            <span class="text-muted fw-bold">Năm xuất bản: </span>
-            <span class="fw-semibold">{{ book.publishYear }}</span>
-          </p>
+            <p class="mb-2">
+              <span class="text-muted fw-bold">Năm xuất bản: </span>
+              <span class="fw-semibold">{{ book.publishYear }}</span>
+            </p>
 
-          <p class="mb-2">
-            <span class="text-muted fw-bold">Số quyển còn lại: </span>
-            <span class="fw-semibold text-danger">{{ book.number }}</span>
-          </p>
+            <p class="mb-2">
+              <span class="text-muted fw-bold">Số quyển còn lại: </span>
+              <span class="fw-semibold text-danger">{{ book.number }}</span>
+            </p>
 
-          <p class="mb-3">
-            <span class="text-muted fw-bold">Giá: </span>
-            <span class="fw-semibold text-danger fw-bold">{{ book.unitCost }} VND</span>
-          </p>
+            <p class="mb-3">
+              <span class="text-muted fw-bold">Giá: </span>
+              <span class="fw-semibold text-danger fw-bold">{{ book.unitCost }} VNĐ</span>
+            </p>
 
-          <div>
-            <button v-if="!isBorrowing" @click="borrowing" class="btn btn-success w-100">
-              Đăng kí mượn
-            </button>
-            <div v-else>
-              <p class="fw-bold text-danger">Nhập số ngày bạn muốn mượn (7 - 60 ngày).</p>
-              <div class="d-flex gap-2">
-                <input type="number" v-model="borrowedDays" min="7" max="60" class="borrow-input"
-                  style="width: 60px;" />
-                <button class="btn-success" style="width: 30%;" @click="handleBorrow">Xác nhận</button>
-                <button class="btn-outline-secondary" @click="cancelBorrowing">Hủy</button>
+            <div>
+              <button v-if="!isBorrowing" @click="borrowing" class="btn btn-success w-100">
+                Đăng kí mượn
+              </button>
+              <div v-else>
+                <p class="fw-bold text-danger">Nhập số ngày bạn muốn mượn (7 - 60 ngày).</p>
+                <div class="d-flex align-items-center">
+                  <input type="number" v-model="borrowedDays" min="7" max="60" class="form-control me-2" />
+                  <button class="btn btn-success me-2" @click="handleBorrow">Xác nhận</button>
+                  <button class="btn btn-outline-secondary" @click="cancelBorrowing">Hủy</button>
+                </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
+      <div class="col-lg-6">
+        <div class="comments-container border p-4 rounded bg-light h-100">
+          <div class="comments-header fw-bold border-bottom pb-2 mb-3">Bình luận sách:</div>
+
+          <div class="comment-input-container d-flex mb-4">
+            <input v-model="formData.text" placeholder="Nhập bình luận của bạn..." class="form-control me-2" />
+            <button @click="submitComment" class="btn btn-primary text-nowrap">Gửi bình luận</button>
+          </div>
+
+          <div v-if="userComments.length" class="comment-list overflow-auto pe-2" style="max-height: 400px;">
+            <div class="comment-item p-3 mb-2 rounded border" v-for="comment in userComments" :key="comment._id">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="fw-bold text-primary">
+                  {{ comment.user.username }}
+                </div>
+                <div class="text-muted small fst-italic text-end ms-2">
+                  {{ countDay(comment) }}
+                  <span v-if="comment.updatedAt && comment.updatedAt !== comment.createdAt">
+                    (Đã chỉnh sửa <i class="fa-solid fa-gear"></i>)
+                  </span>
+                </div>
+              </div>
+
+              <div v-if="isEditing === comment._id" class="d-flex align-items-center mb-2">
+                <input v-model="editedText" class="form-control form-control-sm me-2" />
+                <button @click="saveEdit(comment._id)" class="btn btn-success btn-sm me-1 text-nowrap">Lưu</button>
+                <button @click="cancelEdit" class="btn btn-outline-secondary btn-sm text-nowrap">Hủy</button>
+              </div>
+
+              <div v-else class="comment-text">{{ comment.text }}</div>
+
+              <div v-if="auth?._id === comment.user._id" class="d-flex mt-2 justify-content-end align-items-center">
+                <small v-if="isDeleting === comment._id" class="text-danger me-2">Bạn có muốn xóa bình luận?</small>
+                <small v-if="isEditing === comment._id" class="text-warning me-2">Bạn có muốn sửa bình luận?</small>
+
+                <template v-if="!isEditing && !isDeleting">
+                  <button class="border-0 text-warning bg-transparent me-2" style="font-size: 12px"
+                    @click="handleEdit(comment)">
+                    <i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa
+                  </button>
+                  <button class="border-0 text-danger bg-transparent" style="font-size: 12px"
+                    @click="handleDelete(comment._id)">
+                    <i class="fa-solid fa-trash"></i> Xóa
+                  </button>
+                </template>
+
+                <template v-if="isDeleting === comment._id">
+                  <button @click="confirmDelete" class="btn btn-danger btn-sm me-1 text-nowrap">Xóa</button>
+                  <button @click="cancelDelete" class="btn btn-outline-secondary btn-sm text-nowrap">Hủy</button>
+                </template>
+              </div>
+            </div>
+          </div>
+          <p v-else class="text-center text-muted">Chưa có bình luận nào.</p>
+        </div>
       </div>
     </div>
-    <!-- Thông báo không hiển thị sách -->
-    <div v-else class="loading">
-      <p>Đang tải sách...</p>
-    </div>
-    <!-- Phần bình luận -->
-    <div v-if="book" class="comments-container mt-2 border p-4 rounded w-50 responsive-comment">
-      <div class="comments-header fw-bold">Bình luận sách:</div>
-      <!-- Ô nhập bình luận -->
-      <div class="comment-input-container d-flex">
-        <input v-model="formData.text" placeholder="Nhập bình luận của bạn..."
-          class="border border-secondary me-1 rounded shadow-sm flex-grow-1 custom-outline" />
-        <button @click="submitComment" class="btn btn-primary">Gửi bình luận</button>
-        <!--v-model="newComment"  @click="submitComment" -->
+    <div v-else class="loading text-center py-5">
+      <div class="spinner-border text-success" role="status">
+        <span class="visually-hidden">Loading...</span>
       </div>
-      <!-- Danh sách bình luận -->
-      <ul class="comment-list mt-4 overflow-auto" style="max-height: 300px;" v-if="userComments.length">
-        <li class="comment-item" v-for="comment in userComments" :key="comment._id">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="fw-bold text-primary">
-              {{ comment.user.username }}
-            </div>
-            <div class="text-muted small fst-italic">
-              {{ countDay(comment) }}
-              <span v-if="comment.updatedAt && comment.updatedAt !== comment.createdAt">
-                (Đã chỉnh sửa <i class="fa-solid fa-gear"></i>)
-              </span>
-            </div>
-          </div>
-
-          <!-- Hiển thị ô input nếu đang chỉnh sửa -->
-          <div v-if="isEditing === comment._id" class="d-flex align-items-center">
-            <input v-model="editedText" class="form-control form-control-sm me-2" />
-          </div>
-
-          <!-- Nếu không chỉnh sửa thì chỉ hiển thị text -->
-          <div v-else class="comment-text">{{ comment.text }}</div>
-
-          <div v-if="auth._id === comment.user._id" class="d-flex mt-2 algin-items-center">
-            <p class="me-auto mb-0" style="font-size: 12px;">
-              <span v-if="isDeleting === comment._id" class="text-danger">Bạn có muốn xóa bình luận?</span>
-              <span v-if="isEditing === comment._id" class="text-warning">Bạn có muốn sửa bình luận?</span>
-            </p>
-            <button v-if="isEditing !== comment._id && isDeleting !== comment._id" class="border-0 text-warning"
-              style="font-size: 12px; width: 80px" @click="() => handleEdit(comment)">
-              <i class="fa-solid fa-pen-to-square"></i>
-              Chỉnh sửa
-            </button>
-            <button v-if="isEditing !== comment._id && isDeleting !== comment._id" class="border-0 text-danger ms-2"
-              style="font-size: 12px; width: 80px" @click="() => handleDelete(comment._id)">
-              <i class="fa-solid fa-trash"></i>
-              Xóa
-            </button>
-            <!-- Hiển thị khi chọn sửa bình luận -->
-            <button v-if="isEditing === comment._id" @click="saveEdit(comment._id)" class="border-0 text-warning"
-              style="font-size: 12px; width: 80px">
-              <i class="fa-solid fa-circle-check"></i>
-              Xác nhận
-            </button>
-            <button v-if="isEditing === comment._id" @click="cancelEdit" class="border-0 text-danger ms-2"
-              style="font-size: 12px; width: 80px"> <i class="fa-solid fa-circle-xmark"></i> Hủy</button>
-            <!-- Hiển thị khi xóa bình luận -->
-            <button v-if="isDeleting === comment._id" @click="confirmDelete" class="border-0 text-danger"
-              style="font-size: 12px; width: 80px">
-              <i class="fa-solid fa-circle-check"></i>
-              Xóa
-            </button>
-            <button v-if="isDeleting === comment._id" @click="cancelDelete" class="border-0 text-secondary ms-2"
-              style="font-size: 12px; width: 80px"> <i class="fa-solid fa-circle-xmark"></i> Hủy</button>
-          </div>
-        </li>
-      </ul>
-      <p v-else>Không có bình luận nào.</p>
+      <p class="mt-3 text-muted">Đang tải thông tin sách...</p>
     </div>
   </div>
-
 </template>
 
 <script setup lang="ts">
@@ -138,30 +125,36 @@ import { useRoute } from "vue-router";
 import { ref, onMounted, computed, reactive } from "vue";
 import { toast, type ToastOptions } from 'vue3-toastify';
 import 'vue3-toastify/dist/index.css';
+
 const route = useRoute();
 const bookStore = useBookStore();
 const borrowStore = useBorrowStore();
 const authStore = useAuthStore();
 const commentStore = useCommentStore();
+
 const book = ref(null);
 const auth = ref(null);
 const comments = ref([]);
-
 const formData = reactive<Comment>({
   id: "",
-  user: '',
+  user: "",
   book: "",
-  text: ""
+  text: "",
 });
-
 const borrowedDays = ref(7);
 const isBorrowing = ref(false);
+const isEditing = ref<string | null>(null);
+const editedText = ref("");
+const isDeleting = ref<string | null>(null);
+
 const borrowing = () => {
   isBorrowing.value = true;
-}
+};
+
 const cancelBorrowing = () => {
   isBorrowing.value = false;
-}
+};
+
 const handleBorrow = async () => {
   try {
     const borrowData = {
@@ -173,56 +166,57 @@ const handleBorrow = async () => {
       toast.error("Số ngày mượn phải từ 7 đến 60 ngày!", {
         autoClose: 2000,
         position: toast.POSITION.BOTTOM_RIGHT,
-      } as ToastOptions)
+      } as ToastOptions);
       return;
     }
     await borrowStore.createBorrow(borrowData);
-
-
     toast.success("Yêu cầu của bạn đang chờ duyệt!", {
       autoClose: 2000,
       position: toast.POSITION.BOTTOM_RIGHT,
-    } as ToastOptions)
-
+    } as ToastOptions);
+    isBorrowing.value = false;
   } catch (error) {
     console.error("Error creating borrow:", error);
-    if (error == "Request failed with status code 403")
+    if (error === "Request failed with status code 403") {
       toast.error("Bạn đã mượn vượt quá số lượng cho phép (5 quyển)", {
         autoClose: 2000,
         position: toast.POSITION.BOTTOM_RIGHT,
-      } as ToastOptions)
-    else if (error == "Request failed with status code 400")
+      } as ToastOptions);
+    } else if (error === "Request failed with status code 400") {
       toast.error("Sách đã hết số lượng!", {
         autoClose: 2000,
         position: toast.POSITION.BOTTOM_RIGHT,
-      } as ToastOptions)
-    else ("Lỗi khi mượn sách!")
+      } as ToastOptions);
+    } else {
+      toast.error("Lỗi khi mượn sách!", {
+        autoClose: 2000,
+        position: toast.POSITION.BOTTOM_RIGHT,
+      } as ToastOptions);
+    }
   }
-
 };
 
 const fetchBookData = async () => {
   try {
     const bookId = route.params.id;
-    const fetchedBook = await bookStore.getBookById(bookId);
-    const fetchedComments = await commentStore.getAllComment();
-    const fetchedAuth = await authStore.getUser();
+    const [fetchedBook, fetchedComments, fetchedAuth] = await Promise.all([
+      bookStore.getBookById(bookId),
+      commentStore.getAllComment(),
+      authStore.getUser(),
+    ]);
 
     book.value = fetchedBook;
     auth.value = fetchedAuth;
-    comments.value = fetchedComments;
-    formData.book = fetchedBook
-    formData.user = fetchedAuth
+    comments.value = fetchedComments.filter(
+      (comment: any) => comment.book === book.value._id
+    ).sort(
+      (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
 
-    // Lọc các bình luận cho người dùng hiện tại và sách hiện tại
-    comments.value = fetchedComments.filter((fetchedComment: any) => {
-      return (
-        fetchedComment.book === book.value._id
-      );
-    });
-
-    comments.value = comments.value.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    console.log(comments.value);
+    if (book.value) {
+      formData.book = book.value._id;
+      formData.user = auth.value?._id;
+    }
   } catch (error) {
     console.error("Error fetching data:", error);
   }
@@ -231,32 +225,22 @@ const fetchBookData = async () => {
 function countDay(comment: any): string {
   const today = new Date();
   const updateDate = comment.updatedAt ? new Date(comment.updatedAt) : new Date(comment.createdAt);
-
   const diffSeconds = Math.floor((today.getTime() - updateDate.getTime()) / 1000);
-
   const diffYears = Math.floor(diffSeconds / (60 * 60 * 24 * 365));
   if (diffYears > 0) return `${diffYears} năm trước`;
-
   const diffMonths = Math.floor(diffSeconds / (60 * 60 * 24 * 30));
   if (diffMonths > 0) return `${diffMonths} tháng trước`;
-
   const diffWeeks = Math.floor(diffSeconds / (60 * 60 * 24 * 7));
   if (diffWeeks > 0) return `${diffWeeks} tuần trước`;
-
   const diffDays = Math.floor(diffSeconds / (60 * 60 * 24));
   if (diffDays > 0) return `${diffDays} ngày trước`;
-
   const diffHours = Math.floor(diffSeconds / (60 * 60));
   if (diffHours > 0) return `${diffHours} giờ trước`;
-
   const diffMinutes = Math.floor(diffSeconds / 60);
   if (diffMinutes > 0) return `${diffMinutes} phút trước`;
-
   return `${diffSeconds} giây trước`;
 }
 
-const isEditing = ref<string | null>(null);
-const editedText = ref("");
 function handleEdit(comment: any) {
   isEditing.value = comment._id;
   editedText.value = comment.text;
@@ -267,9 +251,10 @@ async function saveEdit(commentId: string) {
     await commentStore.updateComment(commentId, editedText.value);
     isEditing.value = null;
     editedText.value = "";
-    await fetchBookData();
+    fetchBookData();
   } catch (error) {
     console.error("Error:", error);
+    toast.error("Lỗi khi cập nhật bình luận!", { autoClose: 2000 });
   }
 }
 
@@ -278,33 +263,37 @@ function cancelEdit() {
   editedText.value = "";
 }
 
-const isDeleting = ref<string | null>(null);
 async function handleDelete(commentId: string) {
-  isDeleting.value = commentId
+  isDeleting.value = commentId;
 }
 
 async function confirmDelete() {
   try {
     await commentStore.deleteComment(isDeleting.value);
-    await fetchBookData();
+    isDeleting.value = null;
+    fetchBookData();
   } catch (error) {
     console.error("Error: ", error);
+    toast.error("Lỗi khi xóa bình luận!", { autoClose: 2000 });
   }
 }
 
 function cancelDelete() {
-  isDeleting.value = null
+  isDeleting.value = null;
 }
 
-
 async function submitComment() {
+  if (!formData.text.trim()) {
+    toast.warn("Bình luận không được để trống.", { autoClose: 2000 });
+    return;
+  }
   try {
-    const newComment = await commentStore.createComment(formData)
+    await commentStore.createComment(formData);
     formData.text = "";
-    comments.value.unshift(newComment)
-    fetchBookData()
+    fetchBookData();
   } catch (e) {
-    console.log(e)
+    console.log(e);
+    toast.error("Lỗi khi gửi bình luận!", { autoClose: 2000 });
   }
 }
 
@@ -317,65 +306,47 @@ const userComments = computed(() => comments.value);
 
 <style scoped>
 .container {
-  width: 100%;
   max-width: 1200px;
-  margin: 20px auto;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 10px;
-  background-color: #fff;
 }
 
-.book-title {
-  font-size: 2.5rem;
-  margin-bottom: 20px;
-  color: #333;
-}
-
-.book-author {
-  font-size: 1.5rem;
-  margin-bottom: 20px;
-  color: #333;
-}
-
+/* --- Phần thông tin sách --- */
 .book-cover {
-  height: 100%;
-  width: 100%;
-  margin-bottom: 20px;
-  border-radius: 10px;
+  width: 250px;
+  height: 350px;
   object-fit: cover;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.book-info {
-  font-size: 1.2rem;
-  margin: 10px 0;
-  color: #555;
+.book-details .card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.book-info span {
-  font-weight: bold;
-  color: #000;
+.book-details .card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
 }
 
-.flex {
-  display: flex;
+@media (max-width: 768px) {
+  .book-cover {
+    width: 180px;
+    height: 250px;
+  }
 }
 
-.ml-20 {
-  margin-left: 100px;
+/* --- Phần bình luận --- */
+.comments-container {
+  background-color: #f8f9fa;
+  border-color: #dee2e6 !important;
 }
-
-/* comment */
-
-/* Bình luận */
 
 .comments-header {
-  font-size: 1.5rem;
-  margin-bottom: 10px;
-  color: #333;
-  border-bottom: 2px solid #eee;
-  padding-bottom: 5px;
+  font-size: 1.25rem;
+  color: #343a40;
+}
+
+.comment-input-container .form-control {
+  border-radius: 0.375rem;
 }
 
 .comment-list {
@@ -383,126 +354,23 @@ const userComments = computed(() => comments.value);
   padding: 0;
 }
 
-.custom-outline {
-  outline: none;
-  padding: 10px;
-}
-
 .comment-item {
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-  margin-bottom: 10px;
-  background-color: #f9f9f9;
-  border-radius: 5px;
+  background-color: #fff;
+  border: 1px solid #e9ecef;
 }
 
-.comment-item:last-child {
-  border-bottom: none;
+/* Tùy chỉnh input mượn sách */
+.form-control[type="number"] {
+  max-width: 80px;
+  text-align: center;
 }
 
-.comment-text {
-  font-size: 1rem;
-  color: #555;
-}
-
-.comment-date {
+/* Điều chỉnh lại font-size cho các nút nhỏ */
+.btn-sm {
   font-size: 0.8rem;
-  color: #999;
-  margin-top: 5px;
-  text-align: right;
 }
 
-.comment-author {
-  font-size: 0.9rem;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 5px;
-}
-
-/* Ô nhập bình luận */
-.comment-input-container {
-  margin-top: 20px;
-}
-
-.ml {
-  margin-left: 40px;
-}
-
-.mr {
-  margin-right: 200px;
-}
-
-.btn {
-  padding: 10px 20px;
-  font-size: 1rem;
-  color: #fff;
-  background-color: #007bff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.btn-success {
-  background-color: #28a745;
-}
-
-.btn-success:hover {
-  background-color: #218838;
-}
-
-.loading {
-  text-align: center;
-  font-size: 1.5rem;
-  color: #777;
-}
-
-@media screen and (max-width: 1200px) {
-  .responsive-book {
-    flex-wrap: wrap;
-    margin: 0 auto !important;
-    justify-content: center !important;
-  }
-
-  .responsive-content {
-    justify-content: center !important;
-    margin: 20px auto !important;
-    width: 100% !important;
-  }
-
-  .responsive-comment {
-    margin-top: 20px;
-    width: 100% !important;
-  }
-}
-
-/* Nhập số lượng mượn sách */
-.borrow-box {
-  justify-content: start;
-  align-items: center;
-  margin-top: 20px;
-}
-
-.borrow-input {
-  text-align: center;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  outline: none;
-  transition: border-color 0.3s;
-}
-
-.borrow-input:focus {
-  border-color: #198754;
-}
-
-button {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-button:hover {
-  opacity: 0.9;
+.bg-transparent {
+  background-color: transparent !important;
 }
 </style>
